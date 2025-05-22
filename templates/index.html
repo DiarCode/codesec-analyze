@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SecScan Report – {{ filename }}</title>
+
+    <!-- Tailwind CDN & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f9ff",
+                100: "#e0f2fe",
+                200: "#bae6fd",
+                300: "#7dd3fc",
+                400: "#38bdf8",
+                500: "#0ea5e9",
+                600: "#0284c7",
+                700: "#0369a1",
+                800: "#075985",
+                900: "#0c4a6e",
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="h-full bg-slate-50 text-gray-900 antialiased">
+    <!-- ── Header ───────────────────────────────────────────── -->
+    <header class="border-b bg-white shadow-sm sticky top-0 z-50">
+      <div
+        class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between"
+      >
+        <h1 class="font-bold text-xl text-primary-700 flex items-center gap-2">
+          <i class="fas fa-shield-alt text-primary-600"></i> SecScan Report
+          <span class="text-sm font-normal text-gray-500">{{ filename }}</span>
+        </h1>
+        <span class="hidden md:inline-block text-sm text-gray-600">
+          <i class="fas fa-calendar-alt mr-1"></i> Report date: {{ scan_date }}
+        </span>
+      </div>
+    </header>
+
+    <!-- ── Main ─────────────────────────────────────────────── -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+      {# Flash messages ----------------------------------------------------- #}
+      {% with msgs = get_flashed_messages(with_categories=true) %} {% if msgs %}
+      <div
+        class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-amber-500"
+      >
+        <ul>
+          {% for cat, msg in msgs %}
+          <li
+            class="text-sm {{ 'text-rose-600' if cat=='error' else 'text-emerald-600' }}"
+          >
+            <i
+              class="{{ 'fas fa-exclamation-circle' if cat=='error' else 'fas fa-check-circle' }} mr-1"
+            ></i>
+            {{ msg }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %} {% endwith %} {# Severity badge macro
+      ---------------------------------------------- #} {% macro sev_badge(text)
+      -%} {% set level = text.split()[0].upper() %}
+      <span
+        class="inline-flex items-center gap-1 text-white rounded-full px-2.5 py-1 text-xs font-medium
+                   {{ 'bg-red-600' if level=='HIGH' else 'bg-amber-500' if level=='MEDIUM' else 'bg-green-600' }}"
+      >
+        <i
+          class="{{ 'fas fa-circle-exclamation' if level=='HIGH'
+                   else 'fas fa-triangle-exclamation' if level=='MEDIUM'
+                   else 'fas fa-info-circle' }}"
+        ></i>
+        {{ text }}
+      </span>
+      {%- endmacro %} {# ---------------- Summary cards & filter bar
+      ------------------------ #} {% if sast or dast %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {% if sast %}
+        <div
+          class="bg-white rounded-lg shadow-sm p-4 border-t-4 border-primary-500"
+        >
+          <h3 class="text-sm font-medium text-gray-500 mb-1">
+            Static Analysis (SAST)
+          </h3>
+          <div class="flex justify-between items-end">
+            <div class="text-2xl font-bold">{{ sast|length }}</div>
+            <div class="flex gap-1">
+              <span
+                class="text-xs bg-red-100 text-red-800 rounded-full px-2 py-0.5"
+              >
+                {{ sast|selectattr('severity','equalto','HIGH')|list|length }}
+                High
+              </span>
+              <span
+                class="text-xs bg-amber-100 text-amber-800 rounded-full px-2 py-0.5"
+              >
+                {{ sast|selectattr('severity','equalto','MEDIUM')|list|length }}
+                Medium
+              </span>
+              <span
+                class="text-xs bg-green-100 text-green-800 rounded-full px-2 py-0.5"
+              >
+                {{ sast|selectattr('severity','equalto','LOW')|list|length }}
+                Low
+              </span>
+            </div>
+          </div>
+        </div>
+        {% endif %} {% if dast %}
+        <div
+          class="bg-white rounded-lg shadow-sm p-4 border-t-4 border-purple-500"
+        >
+          <h3 class="text-sm font-medium text-gray-500 mb-1">
+            Dynamic Analysis (DAST)
+          </h3>
+          <div class="flex justify-between items-end">
+            <div class="text-2xl font-bold">{{ dast|length }}</div>
+            <div class="flex gap-1">
+              <span
+                class="text-xs bg-red-100 text-red-800 rounded-full px-2 py-0.5"
+              >
+                {{ dast|selectattr('severity','equalto','HIGH')|list|length }}
+                High
+              </span>
+              <span
+                class="text-xs bg-amber-100 text-amber-800 rounded-full px-2 py-0.5"
+              >
+                {{ dast|selectattr('severity','equalto','MEDIUM')|list|length }}
+                Medium
+              </span>
+              <span
+                class="text-xs bg-green-100 text-green-800 rounded-full px-2 py-0.5"
+              >
+                {{ dast|selectattr('severity','equalto','LOW')|list|length }}
+                Low
+              </span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div
+          class="bg-white rounded-lg shadow-sm p-4 border-t-4 border-emerald-500"
+        >
+          <h3 class="text-sm font-medium text-gray-500 mb-1">Scan Status</h3>
+          <div class="flex justify-between items-end">
+            <div class="text-lg font-medium text-emerald-600">Completed</div>
+            <i class="fas fa-check-circle text-emerald-500 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+          <div class="relative flex-1">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <input
+              id="search"
+              type="text"
+              placeholder="Search findings…"
+              class="border rounded-lg pl-10 pr-3 py-2 text-sm w-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div class="w-full md:w-auto">
+            <select
+              id="sevFilter"
+              class="border rounded-lg px-3 py-2 text-sm w-full md:w-40 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">All severities</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          <div class="py-2 px-4 bg-gray-100 rounded-lg">
+            <span id="stats" class="text-sm font-medium text-gray-700">
+              <i class="fas fa-chart-bar mr-1 text-primary-500"></i>
+              <span class="stats-count">0</span> findings
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %} {# ---------------- SAST table
+      --------------------------------------- #} {% if sast %}
+      <section class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div
+          class="border-b border-gray-200 px-4 py-4 flex items-center justify-between"
+        >
+          <h2 class="font-medium text-lg flex items-center gap-2">
+            <i class="fas fa-code text-primary-600"></i> Static Analysis
+            Findings
+          </h2>
+          <span class="text-sm text-gray-500">{{ sast|length }} issues</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="tblSast" class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+              <tr>
+                <th class="px-4 py-3 text-left w-12">#</th>
+                <th class="px-4 py-3 text-left">Severity</th>
+                <th class="px-4 py-3 text-left">File</th>
+                <th class="px-4 py-3 text-left">Line</th>
+                <th class="px-4 py-3 text-left">CWE</th>
+                <th class="px-4 py-3 text-left">Snippet</th>
+                <th class="px-4 py-3 text-left">Description</th>
+                <th class="px-4 py-3 text-left w-32"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for f in sast %}
+              <tr
+                class="hover:bg-gray-50 transition-colors"
+                data-idx="{{ loop.index0 }}"
+                data-type="sast"
+              >
+                <td class="px-4 py-3 font-medium">{{ loop.index }}</td>
+                <td class="px-4 py-3">{{ sev_badge(f.severity) }}</td>
+                <td class="px-4 py-3 text-xs font-mono break-all max-w-[18rem]">
+                  {{ f.file }}
+                </td>
+                <td class="px-4 py-3 font-mono">{{ f.start_line }}</td>
+                <td class="px-4 py-3">
+                  <a
+                    href="https://cwe.mitre.org/data/definitions/{{ f.cwe_id }}.html"
+                    class="text-primary-600 hover:underline flex items-center gap-1"
+                    target="_blank"
+                  >
+                    {{ f.cwe_id }}
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                  </a>
+                </td>
+                <td class="px-4 py-3 max-w-[22rem]">
+                  <code class="text-xs font-mono"
+                    >{{ f.snippet }}</code
+                  >
+                </td>
+                <td class="px-4 py-3">{{ f.description }}</td>
+                <td class="px-4 py-3">
+                  <button
+                    class="btn-remediate px-3 py-1.5 text-sm rounded-md bg-primary-600 text-white hover:bg-primary-700"
+                    onclick="remediate('sast', {{ loop.index0 }})"
+                  >
+                    <i class="fas fa-wrench"></i> Fix Issue
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %} {# ---------------- DAST table
+      --------------------------------------- #} {% if dast %}
+      <section class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div
+          class="border-b border-gray-200 px-4 py-4 flex items-center justify-between"
+        >
+          <h2 class="font-medium text-lg flex items-center gap-2">
+            <i class="fas fa-globe text-purple-600"></i> Dynamic Analysis
+            Findings
+          </h2>
+          <span class="text-sm text-gray-500">{{ dast|length }} issues</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="tblDast" class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+              <tr>
+                <th class="px-4 py-3 text-left w-12">#</th>
+                <th class="px-4 py-3 text-left">Severity</th>
+                <th class="px-4 py-3 text-left">Endpoint</th>
+                <th class="px-4 py-3 text-left">CWE</th>
+                <th class="px-4 py-3 text-left">Snippet</th>
+                <th class="px-4 py-3 text-left">Description</th>
+                <th class="px-4 py-3 text-left w-32"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for f in dast %}
+              <tr
+                class="hover:bg-gray-50 transition-colors"
+                data-idx="{{ loop.index0 }}"
+                data-type="dast"
+              >
+                <td class="px-4 py-3 font-medium">{{ loop.index }}</td>
+                <td class="px-4 py-3">{{ sev_badge(f.severity) }}</td>
+                <td class="px-4 py-3 text-xs font-mono break-all max-w-[18rem]">
+                  {{ f.endpoint }}
+                </td>
+                <td class="px-4 py-3">
+                  <a
+                    href="https://cwe.mitre.org/data/definitions/{{ f.cwe_id }}.html"
+                    class="text-primary-600 hover:underline flex items-center gap-1"
+                    target="_blank"
+                  >
+                    {{ f.cwe_id }}
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                  </a>
+                </td>
+                <td class="px-4 py-3 max-w-[22rem]">
+                  <code class="whitespace-pre-wrap text-xs font-mono"
+                    >{{ f.snippet }}</code
+                  >
+                </td>
+                <td class="px-4 py-3">{{ f.description }}</td>
+                <td class="px-4 py-3">
+                  <button
+                    class="btn-remediate px-3 py-1.5 text-sm rounded-md bg-primary-600 text-white hover:bg-primary-700"
+                    onclick="remediate('dast', {{ loop.index0 }})"
+                  >
+                    <i class="fas fa-wrench"></i> Fix Issue
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %} {# ---------------- Empty-state message
+      ------------------------------- #} {% if not sast and not dast %}
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="bg-gray-100 p-4 rounded-full mb-4">
+          <i class="fas fa-shield-alt text-6xl text-gray-400"></i>
+        </div>
+        <h2 class="text-xl font-medium text-gray-700 mb-2">
+          No Findings Available
+        </h2>
+        <p class="text-gray-500 max-w-md">
+          There are no security findings to display. This could be because no
+          report has been loaded, or because the scan found no issues.
+        </p>
+      </div>
+      {% endif %}
+    </main>
+
+    <!-- ── Modal (unchanged except snippet) ------------------------------ -->
+    <div
+      id="modal"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden z-50"
+    >
+      <div
+        class="bg-white w-full max-w-2xl rounded-lg shadow-lg overflow-hidden"
+      >
+        <div class="border-b px-6 py-4 flex items-center justify-between">
+          <h3 class="font-medium text-lg flex items-center gap-2">
+            <i class="fas fa-wrench text-primary-600"></i> Remediation Steps
+          </h3>
+          <button
+            onclick="hideModal()"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <div id="modalIssue" class="mb-4"></div>
+          <div id="modalBody" class="prose max-h-96 overflow-y-auto"></div>
+        </div>
+        <div class="bg-gray-50 px-6 py-3 flex justify-end">
+          <button
+            onclick="hideModal()"
+            class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <i class="fas fa-check"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Scripts --------------------------------------------------------- -->
+    <script>
+      /* Data from Flask */
+      const sastData = {{ sast|tojson|safe }};
+      const dastData = {{ dast|tojson|safe }};
+
+      /* Severity badge builder (modal only) */
+      function sevBadge(level){
+        const cfg={
+          HIGH  :['bg-red-600'  ,'fa-circle-exclamation'],
+          MEDIUM:['bg-amber-500','fa-triangle-exclamation'],
+          LOW   :['bg-green-600','fa-info-circle']
+        }[level.toUpperCase()]||['bg-gray-500','fa-info-circle'];
+        return `<span class="inline-flex items-center gap-1 text-white rounded-full
+                               px-2.5 py-1 text-xs font-medium ${cfg[0]}">
+                  <i class="fas ${cfg[1]}"></i> ${level}
+                </span>`;
+      }
+
+      /* Search & severity filter */
+      const tables=[document.getElementById('tblSast'),document.getElementById('tblDast')],
+            stats = document.querySelector('.stats-count'),
+            qIn   = document.getElementById('search'),
+            sevIn = document.getElementById('sevFilter');
+
+      function filterRows(){
+        const q  =(qIn?.value||'').toLowerCase(),
+              sev=(sevIn?.value||'');
+        let visible=0;
+        tables.forEach(tbl=>{
+          if(!tbl) return;
+          [...tbl.tBodies[0].rows].forEach(r=>{
+            const txt=r.innerText.toLowerCase(),
+                  rowSev=r.cells[1]?.innerText.split(' ')[0].toUpperCase(),
+                  show=(!q||txt.includes(q)) && (!sev||rowSev===sev);
+            r.style.display=show?'':'none';
+            if(show) visible++;
+          });
+        });
+        stats.textContent=visible;
+      }
+      qIn?.addEventListener('input',filterRows);
+      sevIn?.addEventListener('change',filterRows);
+      filterRows();
+
+      /* Modal helpers */
+      function showModal(issue,body){
+        document.getElementById('modalIssue').innerHTML=issue;
+        document.getElementById('modalBody' ).innerHTML=body;
+        document.getElementById('modal').classList.remove('hidden');
+        document.body.style.overflow='hidden';
+      }
+      function hideModal(){
+        document.getElementById('modal').classList.add('hidden');
+        document.body.style.overflow='';
+      }
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape') hideModal(); });
+
+      /* Simple formatter */
+      function fmt(text){
+        const esc=text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        let out=esc.replace(/^- (.*)/gm,'<li>$1</li>');
+        if(out.includes('<li>')){
+          out=out.replace(/<li>.*?<\/li>/gs,'<ul class="list-disc pl-5 my-2">$&</ul>');
+        }
+        out=out.replace(/`([^`]+)`/g,
+            '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>');
+        return out.split(/\n\n+/).map(p=>{
+          if(p.trim().startsWith('<ul>')) return p;
+          return `<p class="my-2">${p.replace(/\n/g,'<br>')}</p>`;
+        }).join('');
+      }
+
+      /* Fetch remediation */
+      async function remediate(kind, idx){
+        const row = (kind==='sast'?sastData:dastData)[idx];
+        const codeBlock = row.snippet
+          ? `<pre class="rounded-md bg-gray-800 text-white p-4 overflow-x-auto text-sm font-mono mb-2">${row.snippet.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`
+          : '';
+        const issueHtml=`
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <div>${sevBadge(row.severity)}</div>
+              <div class="text-sm text-gray-500">CWE-${row.cwe_id}</div>
+            </div>
+            <h4 class="font-medium text-lg">${row.description}</h4>
+            ${codeBlock}
+            <div class="text-gray-600 text-sm">
+              ${kind==='sast'
+                  ? `<div><strong>File:</strong> ${row.file}</div>
+                     <div><strong>Line:</strong> ${row.start_line}</div>`
+                  : `<div><strong>Endpoint:</strong> ${row.endpoint}</div>`}
+            </div>
+          </div>`;
+        showModal(issueHtml,
+          '<div class="p-4 flex items-center justify-center">' +
+          '<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>' +
+          '<span class="ml-2">Generating remediation…</span></div>');
+
+        try{
+          const res = await fetch('/remediate',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(row)
+          });
+          const data=await res.json();
+          if(data.error){
+            showModal(issueHtml,
+              `<div class="p-4 bg-red-50 text-red-600 rounded">
+                 <i class="fas fa-exclamation-circle mr-2"></i>${data.error}</div>`);
+          }else{
+            showModal(issueHtml,
+              `<div class="space-y-4">
+                 <div class="border-b pb-2">
+                   <h4 class="font-medium text-lg text-primary-700">Recommended Remediation</h4>
+                 </div>
+                 <div class="remediation-content">${fmt(data.html)}</div>
+               </div>`);
+          }
+        }catch(err){
+          showModal(issueHtml,
+            `<div class="p-4 bg-red-50 text-red-600 rounded">
+               <i class="fas fa-exclamation-circle mr-2"></i>Error contacting service
+             </div>`);
+        }
+      }
+
+      /* Hover pulse */
+      document.addEventListener('DOMContentLoaded',()=>{
+        filterRows();
+        document.querySelectorAll('.btn-remediate').forEach(b=>{
+          b.addEventListener('mouseenter',()=>b.classList.add('pulse-animation'));
+          b.addEventListener('mouseleave',()=>b.classList.remove('pulse-animation'));
+        });
+      });
+    </script>
+
+    <!-- ── Styles ---------------------------------------------------------- -->
+    <style>
+      /* sticky table header fix */
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background-color: #f8fafc;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+      .pulse-animation {
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      .remediation-content code {
+        color: #1e40af;
+        background: #f1f5f9;
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </body>
+</html>

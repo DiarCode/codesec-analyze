@@ -1,0 +1,140 @@
+[
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/app.py",
+    "start_line": 22,
+    "end_line": 22,
+    "cwe_id": "259",
+    "severity": "LOW",
+    "confidence": "MEDIUM",
+    "description": "Possible hardcoded password: 'Dese.Decent.Pups.BOOYO0OST'",
+    "snippet": "   21: # JWT setup\n>  22: app.config[\"JWT_SECRET_KEY\"] = \"Dese.Decent.Pups.BOOYO0OST\"  # Change this!\n   23: jwt = JWTManager(app)"
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/app.py",
+    "start_line": 54,
+    "end_line": 54,
+    "cwe_id": "89",
+    "severity": "MEDIUM",
+    "confidence": "LOW",
+    "description": "Possible SQL injection vector through string-based query construction.",
+    "snippet": "   53:     # UNSAFE: user-controlled 'name' goes straight into the query\n>  54:     query = f\"SELECT * FROM item WHERE name = '{name}'\"\n   55:     result = db.engine.execute(query)"
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/app.py",
+    "start_line": 68,
+    "end_line": 68,
+    "cwe_id": "78",
+    "severity": "HIGH",
+    "confidence": "HIGH",
+    "description": "Starting a process with a shell, possible injection detected, security issue.",
+    "snippet": "   67:     cmd = request.args.get('cmd', '')\n>  68:     os.system(cmd)\n   69:     return f\"Ran: {cmd}\", 200"
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/app.py",
+    "start_line": 73,
+    "end_line": 73,
+    "cwe_id": "94",
+    "severity": "HIGH",
+    "confidence": "MEDIUM",
+    "description": "A Flask app appears to be run with debug=True, which exposes the Werkzeug debugger and allows the execution of arbitrary code.",
+    "snippet": "   72:     # Running in debug mode (CWE-502: Exposure of Debug Information)\n>  73:     app.run(debug=True)"
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/config.py",
+    "start_line": 15,
+    "end_line": 15,
+    "cwe_id": "605",
+    "severity": "MEDIUM",
+    "confidence": "MEDIUM",
+    "description": "Possible binding to all interfaces.",
+    "snippet": "   14: postgresql = {\n>  15:     'host':   '0.0.0.0',\n   16:     'user':   'postgres',"
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/config.py",
+    "start_line": 26,
+    "end_line": 26,
+    "cwe_id": "78",
+    "severity": "MEDIUM",
+    "confidence": "HIGH",
+    "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+    "snippet": "   25: if env_cfg:\n>  26:     mssql = eval(env_cfg)\n   27: "
+  },
+  {
+    "type": "SAST",
+    "tool": "bandit",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/db.py",
+    "start_line": 11,
+    "end_line": 11,
+    "cwe_id": "78",
+    "severity": "MEDIUM",
+    "confidence": "HIGH",
+    "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+    "snippet": "   10: if raw_uri:\n>  11:     db_uri = eval(raw_uri)\n   12:     print(f\"[DEBUG] Using DB_URI from env: {db_uri}\")"
+  },
+  {
+    "type": "SAST",
+    "tool": "ml",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/util/__init__.py",
+    "start_line": 1,
+    "end_line": 1,
+    "cwe_id": "N/A",
+    "severity": "MEDIUM",
+    "confidence": 0.831,
+    "description": "Potential vulnerability detected by CodeBERT model"
+  },
+  {
+    "type": "SAST",
+    "tool": "ml",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/__init__.py",
+    "start_line": 1,
+    "end_line": 1,
+    "cwe_id": "N/A",
+    "severity": "MEDIUM",
+    "confidence": 0.831,
+    "description": "Potential vulnerability detected by CodeBERT model"
+  },
+  {
+    "type": "SAST",
+    "tool": "ml",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/resources/__init__.py",
+    "start_line": 1,
+    "end_line": 1,
+    "cwe_id": "N/A",
+    "severity": "MEDIUM",
+    "confidence": 0.831,
+    "description": "Potential vulnerability detected by CodeBERT model"
+  },
+  {
+    "type": "SAST",
+    "tool": "ml",
+    "file": "/Users/diarbegisbayev/Desktop/flask-restful/app/models/__init__.py",
+    "start_line": 1,
+    "end_line": 1,
+    "cwe_id": "N/A",
+    "severity": "MEDIUM",
+    "confidence": 0.831,
+    "description": "Potential vulnerability detected by CodeBERT model"
+  },
+  {
+    "type": "DAST",
+    "tool": "zap",
+    "endpoint": "http://10.202.6.184:5173/",
+    "cwe_id": "693",
+    "severity": "Medium (High)",
+    "confidence": "3",
+    "description": "Content Security Policy (CSP) Header Not Set",
+    "solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.</p>"
+  }
+]
